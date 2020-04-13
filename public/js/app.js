@@ -1,4 +1,3 @@
-console.log('client side js');
 //getting the data of the jsin
 
 const weatherForm =  document.querySelector('form');
