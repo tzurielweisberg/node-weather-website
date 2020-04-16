@@ -4,6 +4,8 @@ const hbs = require('hbs');
 const geocode = require('./utils/geocode');
 const forecast = require('./utils/forecast');
 
+const transelate = require('./utils/transelate');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,7 +16,7 @@ const partialsPath = path.join(__dirname, '../templates/partials');
 
 
 //setup handlebars engine and views location
-app.set('view engine','hbs');
+app.set('view engine', 'hbs');
 app.set('views', viewsPath);
 hbs.registerPartials(partialsPath);
 
@@ -22,7 +24,7 @@ hbs.registerPartials(partialsPath);
 app.use(express.static(publicDirectoryPath));
 
 
-app.get('', (req,res) => {
+app.get('', (req, res) => {
   //matches the name without the extention
   res.render('index', {
     title: 'Weather',
@@ -49,29 +51,55 @@ app.get('/help', (req, res) => {
 
 app.get('/weather', (req, res) => {
   const address = req.query.address
+  const lang = req.query.lang
   console.log(address);
-    
+  
   if(!address){
     return res.send({
       error: 'You must provide a address'
     })
   }
 
-//need to default the object, if there is error it is empty and cannot distructure
-  geocode(address, (error, {latitude, longtitude, location} ={}) => {
-    if (error){
+  //need to default the object, if there is error it is empty and cannot distructure
+  geocode(address, (error, { latitude, longtitude, location } = {}) => {
+    if (error) {
       //will retun and not continue after the log
       return res.send({ error })
     }
-    forecast(latitude, longtitude, (error, dataForecast) => {
-      if (error){
-        return res.send({ error })      
+    forecast(latitude, longtitude, (error, { forecast, temprature, sum }) => {
+      if (error) {
+        return res.send({ error })
       }
-        res.send({
-          location,
-          address: req.query.address,
-          forecast: dataForecast
-        });
+      transelate(lang, req.query.address, (error, transBody) => {
+        if (error) {
+          return res.send({ error })
+        }
+        else {
+          addd = transBody.transelatedValue
+          transelate(lang, sum, (error, transBody2) => {
+            if (error) {
+              return res.send({ error })
+            }
+            else {
+              transelate(lang,  'degrees outside.', (error, transBody3) => {
+                if (error) {
+                  return res.send({ error })
+                }
+                else {
+                  res.send({
+                    location,
+                    address: addd,
+                    forecast: transBody2.transelatedValue,
+                    degrees: temprature ,
+                    degreesString: transBody3.transelatedValue,
+                    transelatedForcast: transBody.transelatedString,
+                  });
+                }
+              })
+            }
+          })
+        }
+      })
     })
   })
 
@@ -84,7 +112,7 @@ app.get('/weather', (req, res) => {
 
 
 app.get('/products', (req, res) => {
-  if(!req.query.search){
+  if (!req.query.search) {
     return res.send({
       error: 'You must provide a search term'
     })
@@ -113,7 +141,7 @@ app.get('*', (req, res) => {
 
 app.listen(port, () => {
   console.log('server is up on port  ' + port);
-  
+
 });
 
 

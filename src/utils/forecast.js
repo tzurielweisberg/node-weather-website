@@ -1,6 +1,5 @@
 
 const request = require('request');
-
 const forecast = (latitude, longtitude, callback) => {
   //whether from darksky
   const url = 'https://api.darksky.net/forecast/a266599aed8af692f9b6d8db246757fb/' + latitude + ',' + longtitude + '?units=si';
@@ -15,11 +14,13 @@ const forecast = (latitude, longtitude, callback) => {
       callback('unable to find location', undefined);
     }
     else {
-      callback(undefined, 
-        body.daily.data[0].summary + " It is currently " + body.currently.temperature + " degrees out. There is a " + body.currently.precipProbability + "% chance of rain."
-        )
+      callback(undefined, {
+        forecast: body.daily.data[0].summary + " It is currently " + body.currently.temperature + " degrees out. There is a " + body.currently.precipProbability + "% chance of rain.",
+        temprature: body.currently.temperature,
+        sum: body.daily.data[0].summary
+      })
     }
   })
-
 }
+
 module.exports = forecast;
